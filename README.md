@@ -1,6 +1,6 @@
-# ACS eBPF Inside Kata Containers
+# Red Hat Advanced Cluster Security (ACS) eBPF Inside Kata Containers
 
-RHACS can't see inside Kata VMs. This repo shows how to fix that.
+ACS can not see inside Kata VMs. This repo shows how to fix that.
 
 ![Demo](demo.gif)
 
