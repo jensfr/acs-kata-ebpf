@@ -1,0 +1,24 @@
+# The default RHACS sensor NetworkPolicy only allows ingress from
+# pods labeled app=collector in the stackrox namespace. When running
+# a collector sidecar inside a Kata pod in another namespace, we need
+# to allow cross-namespace access to the sensor.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-kata-collector-to-sensor
+  namespace: stackrox
+spec:
+  podSelector:
+    matchLabels:
+      app: sensor
+  ingress:
+  - from:
+    - namespaceSelector: {}
+      podSelector:
+        matchLabels:
+          app: collector
+    ports:
+    - port: 8443
+      protocol: TCP
+  policyTypes:
+  - Ingress

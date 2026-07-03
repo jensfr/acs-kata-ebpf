@@ -1,0 +1,23 @@
+# Kata pod WITHOUT in-guest collector. RHACS host-level eBPF cannot
+# see any processes inside this VM — demonstrates the monitoring gap.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-kata
+  namespace: rhacs-demo
+spec:
+  runtimeClassName: kata
+  containers:
+  - name: workload
+    image: registry.access.redhat.com/ubi9/ubi-minimal:latest
+    command:
+    - /bin/sh
+    - -c
+    - |
+      while true; do
+        whoami
+        id
+        curl -s http://example.com > /dev/null 2>&1 || true
+        echo exfil > /tmp/data.txt
+        sleep 30
+      done

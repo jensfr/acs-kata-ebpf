@@ -1,0 +1,53 @@
+# Kata pod WITH in-guest RHACS collector sidecar. The collector runs
+# core_bpf probes against the guest kernel and sends process/network
+# telemetry to the RHACS sensor over standard K8s networking.
+#
+# Prerequisites:
+#   1. Copy collector-tls secret from stackrox namespace (see README)
+#   2. Apply the cross-namespace NetworkPolicy (04-networkpolicy-kata-collector.yaml)
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kata-with-collector
+  namespace: rhacs-demo
+  labels:
+    app: collector
+spec:
+  runtimeClassName: kata
+  containers:
+  - name: workload
+    image: registry.access.redhat.com/ubi9/ubi-minimal:latest
+    command:
+    - /bin/sh
+    - -c
+    - |
+      while true; do
+        whoami
+        id
+        curl -s http://example.com > /dev/null 2>&1 || true
+        echo exfil > /tmp/data.txt
+        sleep 30
+      done
+  - name: collector
+    image: registry.redhat.io/advanced-cluster-security/rhacs-collector-rhel9:4.11.0
+    securityContext:
+      privileged: true
+    env:
+    - name: COLLECTION_METHOD
+      value: CORE_BPF
+    - name: GRPC_SERVER
+      value: sensor.stackrox.svc:443
+    - name: COLLECTOR_CONFIG
+      value: '{"tlsConfig":{"caCertPath":"/var/run/secrets/stackrox.io/certs/ca.pem","clientCertPath":"/var/run/secrets/stackrox.io/certs/collector-cert.pem","clientKeyPath":"/var/run/secrets/stackrox.io/certs/collector-key.pem"}}'
+    - name: SNI_HOSTNAME
+      value: sensor.stackrox.svc
+    - name: COLLECTOR_HOST_ROOT
+      value: ""
+    volumeMounts:
+    - name: collector-certs
+      mountPath: /var/run/secrets/stackrox.io/certs/
+      readOnly: true
+  volumes:
+  - name: collector-certs
+    secret:
+      secretName: collector-tls

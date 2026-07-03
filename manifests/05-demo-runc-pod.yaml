@@ -1,0 +1,22 @@
+# Regular runc pod for comparison. RHACS host-level eBPF sees all
+# processes inside this container because it shares the host kernel.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-runc
+  namespace: rhacs-demo
+spec:
+  containers:
+  - name: workload
+    image: registry.access.redhat.com/ubi9/ubi-minimal:latest
+    command:
+    - /bin/sh
+    - -c
+    - |
+      while true; do
+        whoami
+        id
+        curl -s http://example.com > /dev/null 2>&1 || true
+        echo exfil > /tmp/data.txt
+        sleep 30
+      done
