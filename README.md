@@ -2,6 +2,8 @@
 
 RHACS can't see inside Kata VMs. This repo shows how to fix that.
 
+![Demo](demo.gif)
+
 ## Why RHACS Goes Blind With Kata
 
 RHACS monitors containers by attaching eBPF probes to the host kernel. Every
